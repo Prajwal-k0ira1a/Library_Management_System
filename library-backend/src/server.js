@@ -2,7 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-
+import routes from "./routes/route.js"
 // Load environment variables from .env file
 dotenv.config({
   path: process.cwd() + '/.env'
@@ -24,9 +24,7 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/books', bookRoutes);
-app.use('/api/borrow', borrowRoutes);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -34,13 +32,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
+app.use("/api", routes);
 // Routes
 // app.use('/api/auth', authRoutes);
 // app.use('/api/books', bookRoutes);
 // app.use('/api/borrow', borrowRoutes);
 
 // Start server
-console.log('Connecting to MongoDB with URI:', process.env.MONGO_URI);
+
 connectDB().then(() => {
   const PORT = process.env.PORT;
   app.listen(PORT, () => console.log(`🚀 Server running on port http://localhost:${PORT}`));
