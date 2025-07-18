@@ -19,9 +19,9 @@ export const borrowBook = async (req, res) => {
     book.available -= 1;
     await book.save();
 
-    res.status(201).json({ message: "Book borrowed", borrow });
+    res.status(201).json({ status:true, message: "Book borrowed", borrow });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ status:false, message: "Server error", error: err.message });
   }
 };
 
@@ -32,7 +32,7 @@ export const returnBook = async (req, res) => {
 
     const borrow = await Borrow.findById(borrowId).populate("bookId");
     if (!borrow || borrow.returnDate) {
-      return res.status(400).json({ message: "Invalid or already returned" });
+      return res.status(400).json({ status:false, message: "Invalid or already returned" });
     }
 
     borrow.returnDate = new Date();

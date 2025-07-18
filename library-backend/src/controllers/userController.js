@@ -75,11 +75,23 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-export const updateUser = async (req, res) => {
+const updateUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    const password=password.req.getBody;
+    const userId = req.params.id;
+    const updates = req.body;
 
-    
-  } catch (error) {}
+    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
+      new: true,         // returns the updated document
+      runValidators: true // ensures validation rules are applied
+    });
+
+    res.status(200).json({
+      message: 'User updated successfully',
+      data: updatedUser
+    });
+  } catch (error) {
+    console.error('User update failed:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
+

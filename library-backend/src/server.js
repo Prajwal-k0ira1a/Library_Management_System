@@ -22,6 +22,9 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Ok");
 });
+app.get("/login",(req,res)=>{
+  res.send("Bhayo Login Jau aba")
+})
 
 // Routes
 
