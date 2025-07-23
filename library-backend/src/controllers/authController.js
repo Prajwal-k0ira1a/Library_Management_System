@@ -8,7 +8,7 @@ export const registerUser = async (req, res) => {
 
     // Check for existing user
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ message: "Email already exists why again" });
+    if (userExists) return res.status(400).json({ status: false, message: "Email already exists why again" });
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -17,9 +17,9 @@ export const registerUser = async (req, res) => {
     const user = new User({ name, email, password: hashedPassword, role });
     await user.save();
 
-    res.status(201).json({ message: "User registered successfully", data: user });
+    res.status(201).json({ status: true, message: "User registered successfully", data: user });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ status: false, message: "Server error", error: err.message });
   }
 };
 
@@ -29,11 +29,11 @@ export const loginUser = async (req, res) => {
 
     // Find user
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: "Invalid email or password" });
+    if (!user) return res.status(401).json({ status: false, message: "Invalid email or password" });
 
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid email or password" });
+    if (!isMatch) return res.status(401).json({ status: false, message: "Invalid email or password" });
 
     // Create token
     const token = jwt.sign(
@@ -43,10 +43,11 @@ export const loginUser = async (req, res) => {
     );
 
     res.status(200).json({
+      status: true, 
       token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role }
     });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ status: false, message: "Server error", error: err.message });
   }
 };
