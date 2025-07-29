@@ -3,18 +3,31 @@ import Book from "../models/Book.js";
 // Create a new book (Librarian only)
 export const createBook = async (req, res) => {
   try {
+    const { isbn } = req.body; 
     const book = new Book(req.body);
 
     const existing = await Book.findOne({ isbn });
-    if (existing) return res.status(400).json({ status: false, message: "Book already exists (ISBN duplicate)" });
+    if (existing) {
+      return res.status(400).json({
+        status: false,
+        message: "Book already exists (ISBN duplicate)"
+      });
+    }
 
     await book.save();
-    res.status(201).json({ status: true, message: "Book created successfully", book });
+    res.status(201).json({
+      status: true,
+      message: "Book created successfully",
+      book
+    });
   } catch (err) {
-    res.status(500).json({ status: false, message: "Server error", error: err.message });
+    res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: err.message
+    });
   }
 };
-
 // Get all books
 export const getBooks = async (req, res) => {
   try {
@@ -89,16 +102,16 @@ export const updateBook = async (req, res) => {
     }
 
     // Find and update the book
-    const updatedBook = await Book.findByIdAndUpdate(id, updateData, { 
+    const updatedBook = await Book.findByIdAndUpdate(id, updateData, {
       new: true,
-      runValidators: true 
+      runValidators: true
     });
 
     // Check if book exists
     if (!updatedBook) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "Book not found",
-        bookId: id 
+        bookId: id
       });
     }
 
@@ -107,8 +120,8 @@ export const updateBook = async (req, res) => {
     console.log(`Book updated: ${updatedBook.title} - Fields: ${updatedFields.join(', ')}`);
 
     // Return success response
-    res.status(200).json({ 
-      message: "Book updated successfully", 
+    res.status(200).json({
+      message: "Book updated successfully",
       book: {
         id: updatedBook._id,
         title: updatedBook.title,
@@ -123,9 +136,9 @@ export const updateBook = async (req, res) => {
 
   } catch (err) {
     console.error('Update error:', err);
-    res.status(500).json({ 
-      message: "Server error during update", 
-      error: err.message 
+    res.status(500).json({
+      message: "Server error during update",
+      error: err.message
     });
   }
 };
@@ -140,9 +153,9 @@ export const deleteBook = async (req, res) => {
 
     // Check if book exists
     if (!deletedBook) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "Book not found",
-        bookId: id 
+        bookId: id
       });
     }
 
@@ -150,7 +163,7 @@ export const deleteBook = async (req, res) => {
     console.log(`Book deleted: "${deletedBook.title}" by ${deletedBook.author} (ISBN: ${deletedBook.isbn})`);
 
     // Return success response
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Book deleted successfully",
       deletedBook: {
         id: deletedBook._id,
@@ -165,9 +178,9 @@ export const deleteBook = async (req, res) => {
 
   } catch (err) {
     console.error('Delete error:', err);
-    res.status(500).json({ 
-      message: "Server error during deletion", 
-      error: err.message 
+    res.status(500).json({
+      message: "Server error during deletion",
+      error: err.message
     });
   }
 };

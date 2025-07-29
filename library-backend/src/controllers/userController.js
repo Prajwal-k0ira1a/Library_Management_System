@@ -1,8 +1,7 @@
-import { User } from "../models/User.js";
+import  User  from "../models/User.js";
 import bcrypt from "bcryptjs";
 
-
-export const getUsers = async (req, res) => {
+ const getUsers = async (req, res) => {
   try {
     const user = await User.find();
     if (!user || user.length === 0) {
@@ -26,7 +25,7 @@ export const getUsers = async (req, res) => {
   }
 };
 
-export const getUserById = async (req, res) => {
+const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -49,7 +48,7 @@ export const getUserById = async (req, res) => {
   }
 };
 
-export const deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
 
@@ -95,3 +94,4 @@ const updateUser = async (req, res) => {
   }
 };
 
+export { getUsers, getUserById, deleteUser, updateUser };
