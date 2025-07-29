@@ -5,36 +5,74 @@ import Book from "../models/Book.js";
 export const borrowBook = async (req, res) => {
   try {
     const { userId, bookId } = req.body;
-
+    
+    // Check if book exists and is available
     const book = await Book.findById(bookId);
     if (!book || book.available < 1) {
       return res.status(400).json({ status: false, message: "No available copies" });
     }
-    // Create borrow record
-    const borrow = new Borrow({ userId, bookId });
+
+    // Check if user already has this book borrowed (not returned)
+    const existingBorrow = await Borrow.findOne({ userId, bookId, returnDate: null });
+    if (existingBorrow) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "You already have this book borrowed" 
+      });
+    }
+
+    // Check total number of books currently borrowed by user (not returned)
+    const currentBorrows = await Borrow.countDocuments({ 
+      userId, 
+      returnDate: null 
+    });
+    if (currentBorrows >= 2) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "You can only borrow a maximum of 2 books at a time" 
+      });
+    }
+
+    // Create borrow record with 15-day due date
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 15);
+    
+    const borrow = new Borrow({ 
+      userId, 
+      bookId,
+      dueDate
+    });
     await borrow.save();
 
     // Decrease available count
     book.available -= 1;
     await book.save();
 
-    res.status(201).json({ status:true, message: "Book borrowed", borrow });
+    res.status(201).json({ status: true, message: "Book borrowed", borrow });
   } catch (err) {
-    res.status(500).json({ status:false, message: "Server error", error: err.message });
+    res.status(500).json({ status: false, message: "Server error", error: err.message });
   }
 };
 
-// Return a book
 export const returnBook = async (req, res) => {
   try {
     const { borrowId } = req.body;
 
     const borrow = await Borrow.findById(borrowId).populate("bookId");
     if (!borrow || borrow.returnDate) {
-      return res.status(400).json({ status:false, message: "Invalid or already returned" });
+      return res.status(400).json({ status: false, message: "Invalid or already returned" });
     }
 
-    borrow.returnDate = new Date();
+    // Calculate final fine if overdue
+    const currentDate = new Date();
+    const dueDate = new Date(borrow.dueDate);
+    
+    if (currentDate > dueDate) {
+      const overdueDays = Math.ceil((currentDate - dueDate) / (1000 * 60 * 60 * 24));
+      borrow.fine = 5 + (overdueDays - 1) * 5; // Rs 5 initial + Rs 5 per additional day
+    }
+
+    borrow.returnDate = currentDate;
     await borrow.save();
 
     // Increase book availability
@@ -42,11 +80,108 @@ export const returnBook = async (req, res) => {
     book.available += 1;
     await book.save();
 
-    res.status(200).json({ message: "Book returned", borrow });
+    res.status(200).json({ 
+      status: true,
+      message: "Book returned", 
+      borrow,
+      fine: borrow.fine 
+    });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ 
+      status: false, 
+      message: "Server error", 
+      error: err.message 
+    });
   }
 };
+
+export const renewBook = async (req, res) => {
+  try {
+    const { borrowId } = req.body;
+
+    const borrow = await Borrow.findById(borrowId);
+    if (!borrow || borrow.returnDate) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Invalid borrow record or book already returned" 
+      });
+    }
+
+    if (borrow.renewalCount >= borrow.maxRenewals) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Maximum renewals exceeded" 
+      });
+    }
+
+    // Reset due date to 15 days from now
+    const newDueDate = new Date();
+    newDueDate.setDate(newDueDate.getDate() + 15);
+    
+    borrow.dueDate = newDueDate;
+    borrow.renewalCount += 1;
+    borrow.fine = 0; // Reset any existing fine
+    await borrow.save();
+
+    res.status(200).json({ 
+      status: true, 
+      message: "Book renewed successfully", 
+      borrow,
+      newDueDate 
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      status: false, 
+      message: "Server error", 
+      error: err.message 
+    });
+  }
+};
+
+export const calculateFine = async (req, res) => {
+  try {
+    const { borrowId } = req.params;
+    
+    const borrow = await Borrow.findById(borrowId);
+    if (!borrow || borrow.returnDate) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Invalid borrow record or book already returned" 
+      });
+    }
+
+    const currentDate = new Date();
+    const dueDate = new Date(borrow.dueDate);
+    
+    if (currentDate > dueDate) {
+      const overdueDays = Math.ceil((currentDate - dueDate) / (1000 * 60 * 60 * 24));
+      const fineAmount = 5 + (overdueDays - 1) * 5; // Rs 5 initial + Rs 5 per additional day
+      
+      borrow.fine = fineAmount;
+      await borrow.save();
+      
+      res.status(200).json({ 
+        status: true, 
+        message: "Fine calculated", 
+        overdueDays,
+        fine: fineAmount 
+      });
+    } else {
+      res.status(200).json({ 
+        status: true, 
+        message: "No fine - book not overdue", 
+        fine: 0 
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ 
+      status: false, 
+      message: "Server error", 
+      error: err.message 
+    });
+  }
+};
+
 export const getUserBorrowHistory = async (req, res) => {
   try {
     const userId = req.user._id;
