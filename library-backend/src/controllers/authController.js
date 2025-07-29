@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sendEmail } from '../utils/emailTemplate.js';
 
 export const registerUser = async (req, res) => {
   try {
@@ -8,7 +9,7 @@ export const registerUser = async (req, res) => {
 
     // Check for existing user
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ status: false, message: "Email already exists why again" });
+    if (userExists) return res.status(400).json({ status: false, message: "Email already exists" });
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -16,6 +17,9 @@ export const registerUser = async (req, res) => {
     // Create new user
     const user = new User({ name, email, password: hashedPassword, role });
     await user.save();
+
+    // Send welcome email with original password
+    sendEmail(user.email, 'welcome', user.name, user.email, password);
 
     res.status(201).json({ status: true, message: "User registered successfully", data: user });
   } catch (err) {
