@@ -14,8 +14,16 @@ export const registerUser = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create user data object
+    const userData = { name, email, password: hashedPassword, role };
+    
+    // If there's a file uploaded, add the Cloudinary URL
+    if (req.file) {
+      userData.profileImage = req.file.path;
+    }
+
     // Create new user
-    const user = new User({ name, email, password: hashedPassword, role });
+    const user = new User(userData);
     await user.save();
 
     // Send welcome email with original password
