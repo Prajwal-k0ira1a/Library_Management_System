@@ -1,5 +1,7 @@
 import Borrow from "../models/Borrow.js";
 import Book from "../models/Book.js";
+import User from "../models/User.js";
+import { sendEmail } from '../utils/emailTemplate.js';
 
 // Borrow a book
 export const borrowBook = async (req, res) => {
@@ -48,6 +50,10 @@ export const borrowBook = async (req, res) => {
     book.available -= 1;
     await book.save();
 
+    const user = await User.findById(userId);
+    const dueDateStr = new Date(borrow.dueDate).toLocaleDateString();
+    sendEmail(user.email, 'bookBorrowed', user.name, book.title, dueDateStr);
+
     res.status(201).json({ status: true, message: "Book borrowed", borrow });
   } catch (err) {
     res.status(500).json({ status: false, message: "Server error", error: err.message });
@@ -80,6 +86,9 @@ export const returnBook = async (req, res) => {
     const book = await Book.findById(borrow.bookId._id);
     book.available += 1;
     await book.save();
+
+    const user = await User.findById(borrow.userId);
+    sendEmail(user.email, 'bookReturned', user.name, borrow.bookId.title, borrow.fine || 0);
 
     res.status(200).json({
       status: true,
@@ -160,6 +169,9 @@ export const calculateFine = async (req, res) => {
 
       borrow.fine = fineAmount;
       await borrow.save();
+
+      const user = await User.findById(borrow.userId);
+      sendEmail(user.email, 'bookOverdue', user.name, borrow.bookId.title, fineAmount);
 
       res.status(200).json({
         status: true,

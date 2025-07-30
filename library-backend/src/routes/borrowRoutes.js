@@ -5,7 +5,7 @@ import { protect, authorize } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/borrow", protect, borrowBook);
+router.post("/borrow", protect,authorize("librarian"), borrowBook);
 router.post("/return", protect, returnBook);
 router.post("/renew", protect, renewBook);
 router.get("/fine/:borrowId", protect, calculateFine);

@@ -2,23 +2,25 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import routes from "./routes/route.js"
 // Load environment variables from .env file
-dotenv.config({
-  path: process.cwd() + '/.env'
-});
+dotenv.config();
+
+// Debug: Check if JWT_SECRET is loaded
+console.log('JWT_SECRET loaded:', !!process.env.JWT_SECRET);
+console.log('PORT:', process.env.PORT);
 
 import connectDB from './config/db.js';
 
-import authRoutes from './routes/authRoutes.js';
-import bookRoutes from './routes/bookRoutes.js';
-import borrowRoutes from './routes/borrowRoutes.js';
-
 const app = express();
 
-// app.use(cors());
-app.use(cors());
+app.use(cors({
+  credentials: true,
+  origin: 'http://localhost:3000' // Your frontend URL
+}));
 app.use(express.json());
+app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send("Ok");
 });
@@ -47,3 +49,5 @@ connectDB().then(() => {
   const PORT = process.env.PORT;
   app.listen(PORT, () => console.log(` Server running on port http://localhost:${PORT}`));
 });
+
+
