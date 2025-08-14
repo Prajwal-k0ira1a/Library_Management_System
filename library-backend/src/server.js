@@ -4,6 +4,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import routes from "./routes/route.js"
+import bcrypt from 'bcryptjs';
+import User from './models/User.js';
 // Load environment variables from .env file
 dotenv.config();
 
@@ -17,7 +19,7 @@ const app = express();
 
 app.use(cors({
   credentials: true,
-  origin: 'http://localhost:3000' // Your frontend URL
+  origin: 'http://localhost:5173' // Your frontend URL
 }));
 app.use(express.json());
 app.use(cookieParser());
@@ -28,9 +30,23 @@ app.get("/login",(req,res)=>{
   res.send("Bhayo Login Jau aba")
 })
 
-// Routes
+export async function seedAdmin() {
+  const adminEmail = "admin@library.com";
+  const existingAdmin = await User.findOne({ email: adminEmail });
 
-
+  if (!existingAdmin) {
+    const hashedPassword = await bcrypt.hash("admin123", 10);
+    await User.create({
+      name: "Admin",
+      email: adminEmail,
+      password: hashedPassword,
+      role: "librarian",
+    });
+    console.log("Seeded admin user");
+  } else {
+    console.log("Admin user already exists");
+  }
+}
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -38,12 +54,6 @@ app.use((err, req, res, next) => {
 });
 
 app.use("/api", routes);
-// Routes
-// app.use('/api/auth', authRoutes);
-// app.use('/api/books', bookRoutes);
-// app.use('/api/borrow', borrowRoutes);
-
-// Start server
 
 connectDB().then(() => {
   const PORT = process.env.PORT;
@@ -51,3 +61,4 @@ connectDB().then(() => {
 });
 
 
+seedAdmin();
