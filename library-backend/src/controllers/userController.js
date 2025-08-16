@@ -80,8 +80,8 @@ const updateUser = async (req, res) => {
     const updates = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
-      new: true,         // returns the updated document
-      runValidators: true // ensures validation rules are applied
+      new: true,         
+      runValidators: true 
     });
 
     res.status(200).json({
