@@ -3,8 +3,9 @@ import Book from "../models/Book.js";
 // Create a new book (Librarian only)
 export const createBook = async (req, res) => {
   try {
-    const { isbn } = req.body; 
+   const { title, author, isbn, quantity, available, genre } = req.body;
     const book = new Book(req.body);
+    const bookImages = req.files.map((file) => file.path);
 
     const existing = await Book.findOne({ isbn });
     if (existing) {

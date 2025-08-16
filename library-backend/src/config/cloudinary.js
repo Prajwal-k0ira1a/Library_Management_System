@@ -1,6 +1,6 @@
-import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import multer from 'multer';
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import multer from "multer";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -9,21 +9,32 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure Cloudinary storage for multer
-const storage = new CloudinaryStorage({
+// User profile image storage
+const userStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'library-users',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif'],
-    transformation: [{ width: 300, height: 300, crop: 'fill' }]
+    folder: "library-users",
+    allowed_formats: ["jpg", "jpeg", "png", "gif"],
+    transformation: [{ width: 300, height: 300, crop: "fill" }],
   },
 });
-
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
+const uploadUserImage = multer({
+  storage: userStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-export { cloudinary, upload };
+// Book image storage
+const bookStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "library-books",
+    allowed_formats: ["jpg", "jpeg", "png", "gif"],
+    transformation: [{ width: 500, height: 700, crop: "fill" }],
+  },
+});
+const uploadBookImages = multer({
+  storage: bookStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+export { cloudinary, uploadUserImage, uploadBookImages };
