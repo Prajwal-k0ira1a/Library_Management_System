@@ -6,19 +6,17 @@ import {
   updateBook,
   deleteBook,
 } from "../controllers/bookController.js";
-import { protect, authorize } from "../middleware/auth.js";
+import { checkRole, authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
 router.post(
   "/create",
-  uploadBookImages.array("bookImages", 2),
-  protect,
-  authorize("librarian"),
+  [authenticateToken, checkRole("librarian"), uploadBookImages.array("bookImages", 2)],
   createBook
 );
 router.get("/getAll", getBooks);
-router.put("/:id", protect, authorize("librarian"), updateBook);
-router.delete("/:id", protect, authorize("librarian"), deleteBook);
+router.put("/update/:id", [authenticateToken, checkRole("librarian")], updateBook);
+router.delete("/delete/:id", [authenticateToken, checkRole("librarian")], deleteBook);
 
 export default router;

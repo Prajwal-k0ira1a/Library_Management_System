@@ -1,13 +1,14 @@
 import express from 'express';
 import { getUsers, getUserById, deleteUser, updateUser } from '../controllers/userController.js';
-import { protect, authorize } from '../middleware/auth.js';
+
+import { checkRole, authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get('/all', protect, authorize("librarian"), getUsers);
-router.get('/:id', protect, authorize("librarian"), getUserById);
-router.delete('/:id', protect, authorize("librarian"), deleteUser);
-router.put('/:id', protect, authorize("librarian"), updateUser);
+router.get('/all', [checkRole("librarian"), authenticateToken], getUsers);
+router.get('/:id', [checkRole("librarian"), authenticateToken], getUserById);
+router.delete('/:id', [checkRole("librarian"), authenticateToken], deleteUser);
+router.put('/:id', [checkRole("librarian"), authenticateToken], updateUser);
 
 export default router;
 

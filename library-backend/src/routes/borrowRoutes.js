@@ -1,15 +1,17 @@
 import express from "express";
 import { borrowBook, getAllBorrowRecords, returnBook, renewBook, calculateFine } from "../controllers/borrowController.js";
 import { getUserBorrowHistory } from "../controllers/borrowController.js";
-import { protect, authorize } from "../middleware/auth.js";
+
+import { checkRole, authenticateToken } from "../middleware/auth.js";
+    
 
 const router = express.Router();
 
-router.post("/borrow", protect,authorize("librarian"), borrowBook);
-router.post("/return", protect, returnBook);
-router.post("/renew", protect, renewBook);
-router.get("/fine/:borrowId", protect, calculateFine);
-router.get("/history", protect, getUserBorrowHistory);
-router.get("/records", protect, authorize("librarian"), getAllBorrowRecords);
+router.post("/borrow", [checkRole("librarian"), authenticateToken], borrowBook);
+router.post("/return", [checkRole("librarian"), authenticateToken], returnBook);
+router.post("/renew", [checkRole("librarian"), authenticateToken], renewBook);
+router.get("/fine/:borrowId", [checkRole("librarian"), authenticateToken], calculateFine);
+router.get("/history", [checkRole("librarian"), authenticateToken], getUserBorrowHistory);
+router.get("/records", [checkRole("librarian"), authenticateToken], getAllBorrowRecords);
 
 export default router;

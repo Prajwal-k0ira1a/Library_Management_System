@@ -7,7 +7,7 @@ import userRouter from "./userRoutes.js";
 const router = express.Router();
 
 router.use("/auth", authRouter);
-router.use("/book", bookRouter);
+router.use("/books", bookRouter);
 router.use("/br", borrowRouter);
 router.use("/user", userRouter);
 

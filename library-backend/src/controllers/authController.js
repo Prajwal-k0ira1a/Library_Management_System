@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { sendEmail } from '../utils/emailTemplate.js';
+import { sendEmail } from "../utils/emailTemplate.js";
 
 export const registerUser = async (req, res) => {
   try {
@@ -9,14 +9,17 @@ export const registerUser = async (req, res) => {
 
     // Check for existing user
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ status: false, message: "Email already exists" });
+    if (userExists)
+      return res
+        .status(400)
+        .json({ status: false, message: "Email already exists" });
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user data object
     const userData = { name, email, password: hashedPassword, role };
-    
+
     // If there's a file uploaded, add the Cloudinary URL
     if (req.file) {
       userData.profileImage = req.file.path;
@@ -27,11 +30,19 @@ export const registerUser = async (req, res) => {
     await user.save();
 
     // Send welcome email with original password
-    sendEmail(user.email, 'welcome', user.name, user.email, password);
+    sendEmail(user.email, "welcome", user.name, user.email, password);
 
-    res.status(201).json({ status: true, message: "User registered successfully", data: user });
+    res
+      .status(201)
+      .json({
+        status: true,
+        message: "User registered successfully",
+        data: user,
+      });
   } catch (err) {
-    res.status(500).json({ status: false, message: "Server error", error: err.message });
+    res
+      .status(500)
+      .json({ status: false, message: "Server error", error: err.message });
   }
 };
 
@@ -40,10 +51,16 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ status: false, message: "Invalid email or password" });
+    if (!user)
+      return res
+        .status(401)
+        .json({ status: false, message: "Invalid email or password" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ status: false, message: "Invalid email or password" });
+    if (!isMatch)
+      return res
+        .status(401)
+        .json({ status: false, message: "Invalid email or password" });
 
     // Use same secret as auth middleware
     const token = jwt.sign(
@@ -53,27 +70,38 @@ export const loginUser = async (req, res) => {
     );
 
     // Set cookie
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000 // 1 day
+      secure: false,
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
 
     res.status(200).json({
       status: true,
       message: "Login successful",
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },token
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      token,
     });
   } catch (err) {
-    res.status(500).json({ status: false, message: "Server error", error: err.message });
+    res
+      .status(500)
+      .json({ status: false, message: "Server error", error: err.message });
   }
 };
 
 export const logoutUser = async (req, res) => {
   try {
-    res.clearCookie('token');
+    res.clearCookie("token");
     res.status(200).json({ status: true, message: "Logged out successfully" });
   } catch (err) {
-    res.status(500).json({ status: false, message: "Server error", error: err.message });
+    res
+      .status(500)
+      .json({ status: false, message: "Server error", error: err.message });
   }
 };
