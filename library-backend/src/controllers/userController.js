@@ -1,7 +1,7 @@
-import  User  from "../models/User.js";
+import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 
- const getUsers = async (req, res) => {
+const getUsers = async (req, res) => {
   try {
     const user = await User.find();
     if (!user || user.length === 0) {
@@ -77,20 +77,25 @@ const deleteUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
-    const updates = req.body;
-
+    const updates = { ...req.body };
+    if (req.file) {
+      updates.profileImage = req.file.path;
+    }
+       if (!updates.password) {
+         delete updates.password;
+       }
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
-      new: true,         
-      runValidators: true 
+      new: true,
+      runValidators: true,
     });
 
     res.status(200).json({
-      message: 'User updated successfully',
-      data: updatedUser
+      message: "User updated successfully",
+      data: updatedUser,
     });
   } catch (error) {
-    console.error('User update failed:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("User update failed:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 

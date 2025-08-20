@@ -11,7 +11,7 @@ export const registerUser = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists)
       return res
-        .status(400)
+        .status(409) // Conflict
         .json({ status: false, message: "Email already exists" });
 
     // Hash password
@@ -33,7 +33,7 @@ export const registerUser = async (req, res) => {
     sendEmail(user.email, "welcome", user.name, user.email, password);
 
     res
-      .status(201)
+      .status(201) // Created
       .json({
         status: true,
         message: "User registered successfully",
@@ -41,7 +41,7 @@ export const registerUser = async (req, res) => {
       });
   } catch (err) {
     res
-      .status(500)
+      .status(500) // Internal Server Error
       .json({ status: false, message: "Server error", error: err.message });
   }
 };
@@ -53,13 +53,13 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user)
       return res
-        .status(401)
+        .status(401) // Unauthorized
         .json({ status: false, message: "Invalid email or password" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res
-        .status(401)
+        .status(401) // Unauthorized
         .json({ status: false, message: "Invalid email or password" });
 
     // Use same secret as auth middleware
@@ -90,7 +90,7 @@ export const loginUser = async (req, res) => {
     });
   } catch (err) {
     res
-      .status(500)
+      .status(500) // Internal Server Error
       .json({ status: false, message: "Server error", error: err.message });
   }
 };
@@ -101,7 +101,7 @@ export const logoutUser = async (req, res) => {
     res.status(200).json({ status: true, message: "Logged out successfully" });
   } catch (err) {
     res
-      .status(500)
+      .status(500) // Internal Server Error
       .json({ status: false, message: "Server error", error: err.message });
   }
 };

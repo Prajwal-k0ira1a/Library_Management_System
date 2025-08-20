@@ -21,7 +21,10 @@ const userStorage = new CloudinaryStorage({
 });
 const uploadUserImage = multer({
   storage: userStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB file
+    fieldSize: 2 * 1024 * 1024, // 2 MB per text field
+  },
 });
 
 // Book image storage
@@ -35,7 +38,7 @@ const bookStorage = new CloudinaryStorage({
 });
 const uploadBookImages = multer({
   storage: bookStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 export { cloudinary, uploadUserImage, uploadBookImages };
