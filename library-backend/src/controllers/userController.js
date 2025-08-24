@@ -25,6 +25,28 @@ const getUsers = async (req, res) => {
   }
 };
 
+export const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+    res.status(200).json({
+      status: true,
+      message: "Profile retrieved successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      message: "Error occurred while retrieving profile",
+    });
+  }
+};
 const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -81,9 +103,9 @@ const updateUser = async (req, res) => {
     if (req.file) {
       updates.profileImage = req.file.path;
     }
-       if (!updates.password) {
-         delete updates.password;
-       }
+    if (!updates.password) {
+      delete updates.password;
+    }
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
       new: true,
       runValidators: true,
