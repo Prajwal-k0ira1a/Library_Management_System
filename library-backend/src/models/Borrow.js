@@ -5,11 +5,13 @@ const borrowSchema = new mongoose.Schema({
   bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
   borrowDate: { type: Date, default: Date.now },
   dueDate: { type: Date, required: true },
-  returnDate: { type: Date, default: null },
+  returnDate: { type: Date },
   fine: { type: Number, default: 0 },
-  renewalCount: { type: Number, default: 0 },
-  maxRenewals: { type: Number, default: 10 }
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected", "pending_return", "returned"],
+    default: "pending",
+  },
 });
 
-const Borrow = mongoose.model("Borrow", borrowSchema);
-export default Borrow;
+export default mongoose.model("Borrow", borrowSchema);

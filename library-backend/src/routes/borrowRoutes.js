@@ -1,34 +1,33 @@
 import express from "express";
+
 import {
-  borrowBook,
-  getAllBorrowRecords,
-  returnBook,
-  renewBook,
-  calculateFine,
-  getUserBorrowHistory,
+  requestBorrowBook,
+  handleBorrowRequest,
+  getMyBorrowRequests,
+  getPendingBorrowRequests,
+  requestReturn,
+  approveReturn,
 } from "../controllers/borrowController.js";
-
-import { checkRole, authenticateToken } from "../middleware/auth.js";
-
+import { authenticateToken, checkRole } from "../middleware/auth.js";
 const router = express.Router();
+router.post("/", authenticateToken, requestBorrowBook);
+router.get("/my", authenticateToken, getMyBorrowRequests);
+router.post("/return/:borrowId", authenticateToken, requestReturn);
 
-router.post("/borrow", [authenticateToken, checkRole("librarian")], borrowBook);
-router.post("/return", [authenticateToken, checkRole("librarian")], returnBook);
-router.post("/renew", [authenticateToken, checkRole("librarian")], renewBook);
+// Librarian
 router.get(
-  "/fine/:borrowId",
+  "/pending",
   [authenticateToken, checkRole("librarian")],
-  calculateFine
+  getPendingBorrowRequests
 );
-router.get(
-  "/history",
+router.put(
+  "/:requestId",
   [authenticateToken, checkRole("librarian")],
-  getUserBorrowHistory
+  handleBorrowRequest
 );
-router.get(
-  "/records",
+router.put(
+  "/approve-return/:borrowId",
   [authenticateToken, checkRole("librarian")],
-  getAllBorrowRecords
+  approveReturn
 );
-
 export default router;

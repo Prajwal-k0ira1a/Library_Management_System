@@ -11,8 +11,8 @@ import connectDB from "./config/db.js";
 dotenv.config();
 
 // Debug: Check if JWT_SECRET is loaded
-console.log("JWT_SECRET loaded:", !!process.env.JWT_SECRET);
-console.log("PORT:", process.env.PORT);
+// console.log("JWT_SECRET loaded:", !!process.env.JWT_SECRET);
+// console.log("PORT:", process.env.PORT);
 const app = express();
 app.use(
   cors({
@@ -61,4 +61,4 @@ connectDB().then(() => {
   );
 });
 
-seedAdmin();
+// seedAdmin();
