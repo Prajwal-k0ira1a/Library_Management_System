@@ -130,17 +130,26 @@ const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     const updates = { ...req.body };
+
+    // Handle profile image if uploaded
     if (req.file) {
       updates.profileImage = req.file.path;
     }
-    if (!updates.password) {
+
+    // Handle password update
+    if (updates.password) {
+      // Hash the new password
+      updates.password = await bcrypt.hash(updates.password, 10);
+    } else {
+      // If no password provided, remove it from updates
       delete updates.password;
     }
+
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
       new: true,
       runValidators: true,
     });
-
+    console.log("User updated:", updatedUser);
     res.status(200).json({
       message: "User updated successfully",
       data: updatedUser,

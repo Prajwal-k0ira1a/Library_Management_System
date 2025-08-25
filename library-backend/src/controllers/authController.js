@@ -68,7 +68,7 @@ export const loginUser = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // Set cookie
+    
     res.cookie("token", token, {
       httpOnly: true,
       secure: false,

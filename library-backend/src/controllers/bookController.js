@@ -77,21 +77,6 @@ export const updateBook = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-
-    console.log("Update request received:");
-    console.log("Book ID:", id);
-    console.log("Request Body:", req.body);
-    console.log("Content-Type:", req.headers['content-type']);
-    
-    // Validate that we have some data to update
-    if (!updateData || Object.keys(updateData).length === 0) {
-      return res.status(400).json({
-        status: false,
-        message: "No update data provided",
-        receivedData: updateData
-      });
-    }
-
     // Handle quantity updates - ensure it's a positive number
     if (updateData.quantity !== undefined) {
       if (updateData.quantity < 0) {
