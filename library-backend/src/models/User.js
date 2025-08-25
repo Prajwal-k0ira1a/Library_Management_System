@@ -5,8 +5,10 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, minlength:10, required: true },
-  role: { type: String, enum: ["borrower", "librarian"], default: "borrower" }
+  role: { type: String, enum: ["borrower", "librarian"], default: "borrower" },
+  isActive: { type: Boolean, default: true }
 });
 
 const User = mongoose.model("User", userSchema);
+
 export default User;

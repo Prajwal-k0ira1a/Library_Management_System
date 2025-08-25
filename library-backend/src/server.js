@@ -19,6 +19,7 @@ app.use(
     origin: "http://localhost:5173",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
+    exposedHeaders: ["set-cookie"],
   })
 );
 app.use(express.json());
@@ -40,6 +41,7 @@ export async function seedAdmin() {
       email: adminEmail,
       password: hashedPassword,
       role: "librarian",
+      isActive: true,
     });
     console.log("Seeded admin user");
   } else {

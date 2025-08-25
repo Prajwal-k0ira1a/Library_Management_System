@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 const getUsers = async (req, res) => {
   try {
-    const user = await User.find();
+    const user = await User.find({ isActive: true }).select("-password");
     if (!user || user.length === 0) {
       return res.status(400).json({
         status: false,
@@ -49,7 +49,7 @@ export const getCurrentUser = async (req, res) => {
 };
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findOne({ _id: req.params.id, isActive: false });
     if (!user) {
       return res.status(400).json({
         status: false,
@@ -70,32 +70,62 @@ const getUserById = async (req, res) => {
   }
 };
 
-const deleteUser = async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
+// Optionally, change deleteUser to soft delete
+// const deleteUser = async (req, res) => {
+//   try {
+//     const user = await User.findByIdAndUpdate(
+//       req.params.id,
+//       { isDeleted: true },
+//       { new: true }
+//     );
+//     if (!user) {
+//       return res.status(400).json({
+//         status: false,
+//         message: `No users with id ${req.params.id} found`,
+//       });
+//     }
+//     res.status(200).json({
+//       status: true,
+//       message: "User soft deleted successfully",
+//       data: user,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       status: false,
+//       message: `Error occured while soft deleting the user ${req.params.id}`,
+//       error: error.message,
+//     });
+//   }
+// };
 
+const softDelete = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { isActive: false },
+      { new: true }
+    );
     if (!user) {
-      return res.status(400).json({
+      return res.status(404).json({
         status: false,
-        message: `No users with id ${req.params.id} found`,
+        message: `User with id ${req.params.id} not found`,
       });
     }
-
     res.status(200).json({
       status: true,
-      message: "User deleted successfully",
+      message: "User soft deleted successfully",
       data: user,
     });
   } catch (error) {
     console.log(error);
     res.status(500).json({
       status: false,
-      message: `Error occured while deleting the datat of user ${req.params.id}`,
+      message: "Error occurred while soft deleting user",
       error: error.message,
     });
   }
 };
-
 const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -121,4 +151,4 @@ const updateUser = async (req, res) => {
   }
 };
 
-export { getUsers, getUserById, deleteUser, updateUser };
+export { getUsers, getUserById, softDelete, updateUser };

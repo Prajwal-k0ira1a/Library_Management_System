@@ -3,8 +3,8 @@ import {
   getUsers,
   getCurrentUser,
   getUserById,
-  deleteUser,
   updateUser,
+  softDelete,
 } from "../controllers/userController.js";
 import { uploadUserImage } from "../config/cloudinary.js";
 import { checkRole, authenticateToken } from "../middleware/auth.js";
@@ -21,7 +21,7 @@ router.get("/me", authenticateToken, getCurrentUser);
 router.delete(
   "/delete/:id",
   [authenticateToken, checkRole("librarian")],
-  deleteUser
+  softDelete
 );
 router.put("/update/:id", uploadUserImage.single("profileImage"), updateUser);
 

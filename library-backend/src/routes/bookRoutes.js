@@ -22,7 +22,7 @@ router.post(
 router.get("/getAll", getBooks);
 router.put(
   "/update/:id",
-  [authenticateToken, checkRole("librarian")],
+  [authenticateToken, checkRole("librarian"), uploadBookImages.array("bookImages", 2)],
   updateBook
 );
 router.delete(
