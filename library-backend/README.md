@@ -1,88 +1,83 @@
-Authentication Routes (/api/auth)
-POST /api/auth/register - Register a new user (librarian only)
+# Library Management System API
 
-Requires: profileImage (optional), name, email, password, role
-Protected: Yes, librarian only
-Note: Includes image upload capability
-POST /api/auth/login - Login user
+## Overview
 
-Requires: email, password
-Protected: No
-Note: Uses rate limiting
-POST /api/auth/logout - Logout user
+This is the backend API for the Library Management System that supports both borrower and librarian roles with appropriate access controls.
 
-Protected: No
-Note: Clears authentication cookie
-Book Routes (/api/books)
-POST /api/books/create - Create a new book
+## API Endpoints Access Matrix
 
-Requires: title, author, isbn, quantity, available, genre, bookImages
-Protected: Yes, librarian only
-Note: Supports multiple image uploads (up to 2)
-GET /api/books/getAll - Get all books
+| Endpoint                           | Public | Borrower | Librarian | Description                               |
+| ---------------------------------- | ------ | -------- | --------- | ----------------------------------------- |
+| **Authentication**                 |
+| `/auth/register`                   | ✅     | ✅       | ✅        | User registration (no auth required)      |
+| `/auth/login`                      | ✅     | ✅       | ✅        | User login (no auth required)             |
+| `/auth/logout`                     | ❌     | ✅       | ✅        | User logout (requires auth)               |
+| **Books**                          |
+| `/books/getAll`                    | ✅     | ✅       | ✅        | Get all available books (public browsing) |
+| `/books/create`                    | ❌     | ❌       | ✅        | Create new book (librarian only)          |
+| `/books/update/:id`                | ❌     | ❌       | ✅        | Update book details (librarian only)      |
+| `/books/delete/:id`                | ❌     | ❌       | ✅        | Delete book (librarian only)              |
+| **Users**                          |
+| `/users/me`                        | ❌     | ✅       | ✅        | Get current user profile                  |
+| `/users/update/:id`                | ❌     | ✅\*     | ✅        | Update user profile (own profile only)    |
+| `/users/all`                       | ❌     | ❌       | ✅        | Get all users (librarian only)            |
+| `/users/get/:id`                   | ❌     | ❌       | ✅        | Get specific user (librarian only)        |
+| `/users/delete/:id`                | ❌     | ✅\*     | ✅        | Delete user (own account only)            |
+| **Borrowing**                      |
+| `/borrow/request-borrow`           | ❌     | ✅       | ✅        | Request to borrow a book                  |
+| `/borrow/my`                       | ❌     | ✅       | ✅        | Get user's borrow history                 |
+| `/borrow/return/:borrowId`         | ❌     | ✅       | ✅        | Request to return a book                  |
+| `/borrow/pending`                  | ❌     | ❌       | ✅        | Get pending borrow requests (librarian)   |
+| `/borrow/pending-returns`          | ❌     | ❌       | ✅        | Get pending return requests (librarian)   |
+| `/borrow/:requestId`               | ❌     | ❌       | ✅        | Handle borrow request (librarian)         |
+| `/borrow/approve-return/:borrowId` | ❌     | ❌       | ✅        | Approve book return (librarian)           |
+| `/borrow/all`                      | ❌     | ❌       | ✅        | Get all borrow records (librarian)        |
 
-Protected: No
-Returns: List of all books
-PUT /api/books/update/:id - Update a book
+## Role-Based Access Control
 
-Requires: book ID and fields to update
-Protected: Yes, librarian only
-Note: Can update quantity, available, and other book details
-DELETE /api/books/delete/:id - Delete a book
+### Public Access
 
-Requires: book ID
-Protected: Yes, librarian only
+- Book browsing (`/books/getAll`)
+- User registration and login
 
+### Borrower Access
 
+- View and update own profile
+- Browse books
+- Request book borrows
+- View borrow history
+- Request book returns
+- Delete own account
 
+### Librarian Access
 
-Borrow Routes (/api/borrow)
-POST /api/borrow/ - Create a borrow request
+- All borrower permissions
+- Manage books (create, update, delete)
+- View all users
+- Handle borrow requests
+- Approve book returns
+- View all borrow records
+- Manage user accounts
 
-Requires: userId, bookId
-Protected: Yes, authenticated user
-GET /api/borrow/my - Get user's borrow requests
+## Authentication
 
-Protected: Yes, authenticated user
-Returns: User's borrow history
-POST /api/borrow/return/:borrowId - Request to return a book
+- **JWT Tokens**: Used for authenticated endpoints
+- **Role-based Middleware**: `checkRole("librarian")` for librarian-only endpoints
+- **Rate Limiting**: Applied to login endpoints
+- **File Upload**: Supported for user profiles and book images
 
-Requires: borrowId
-Protected: Yes, authenticated user
-GET /api/borrow/pending - Get all pending borrow requests
+## Security Features
 
-Protected: Yes, librarian only
-Returns: All pending borrow requests
-PUT /api/borrow/:requestId - Handle borrow request
+- Password hashing with bcrypt
+- JWT token authentication
+- Role-based access control
+- Input validation and sanitization
+- Soft delete for data integrity
+- File upload security with Cloudinary
 
-Requires: requestId, status
-Protected: Yes, librarian only
-Note: For approving/rejecting borrow requests
-PUT /api/borrow/approve-return/:borrowId - Approve return request
+## Notes
 
-Requires: borrowId
-Protected: Yes, librarian only
-Note: Also handles fine calculation
-
-User Routes (/api/users)
-GET /api/users/all - Get all users
-
-Protected: Yes, librarian only
-Returns: All active users
-GET /api/users/get/:id - Get user by ID
-
-Protected: Yes, librarian only
-Returns: Specific user details
-GET /api/users/me - Get current user profile
-
-Protected: Yes, authenticated user
-Returns: Current user's details
-DELETE /api/users/delete/:id - Soft delete user
-
-Protected: Yes, librarian only
-Note: Sets isActive to false instead of actual deletion
-PUT /api/users/update/:id - Update user
-
-Protected: Partially (can update own profile)
-Supports: profileImage upload, password update
-Note: Passwords are hashed before storage
+- Users can only update/delete their own profiles unless they are librarians
+- Book browsing is available to everyone without authentication
+- Registration and login are public endpoints
+- All other endpoints require proper authentication and authorization

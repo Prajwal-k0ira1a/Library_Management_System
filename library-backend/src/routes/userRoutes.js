@@ -11,18 +11,23 @@ import { checkRole, authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
+// Librarian only routes
 router.get("/all", [authenticateToken, checkRole("librarian")], getUsers);
 router.get(
   "/get/:id",
   [authenticateToken, checkRole("librarian")],
   getUserById
 );
-router.get("/me", [authenticateToken,uploadUserImage.single("profileImage")], getCurrentUser);
-router.delete(
-  "/delete/:id",
-  [authenticateToken],
-  softDelete
+
+// Routes accessible by both borrowers and librarians
+router.get("/me", [authenticateToken], getCurrentUser);
+router.put(
+  "/update/:id",
+  [authenticateToken, uploadUserImage.single("profileImage")],
+  updateUser
 );
-router.put("/update/:id", uploadUserImage.single("profileImage"), updateUser);
+
+// Soft delete - only allow users to delete their own account or librarians to delete any
+router.delete("/delete/:id", [authenticateToken], softDelete);
 
 export default router;

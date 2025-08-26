@@ -7,6 +7,7 @@ const bookSchema = new mongoose.Schema({
   isbn: { type: String, required: true, unique: true },
   quantity: { type: Number, required: true },
   available: { type: Number, required: true },
+  description: { type: String, required: true },  
   genre: { type: String, required: true },
   status: {
     type: String,

@@ -49,7 +49,7 @@ export const getCurrentUser = async (req, res) => {
 };
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findOne({ _id: req.params.id, isActive: false });
+    const user = await User.findOne({ _id: req.params.id, isActive: true });
     if (!user) {
       return res.status(400).json({
         status: false,
@@ -101,15 +101,29 @@ const getUserById = async (req, res) => {
 
 const softDelete = async (req, res) => {
   try {
+    const userId = req.params.id;
+    const currentUser = req.user;
+
+    // Check if user is trying to delete their own account or if they are a librarian
+    if (
+      currentUser.role !== "librarian" &&
+      currentUser._id.toString() !== userId
+    ) {
+      return res.status(403).json({
+        status: false,
+        message: "You can only delete your own account",
+      });
+    }
+
     const user = await User.findByIdAndUpdate(
-      req.params.id,
+      userId,
       { isActive: false },
       { new: true }
     );
     if (!user) {
       return res.status(404).json({
         status: false,
-        message: `User with id ${req.params.id} not found`,
+        message: `User with id ${userId} not found`,
       });
     }
     res.status(200).json({
@@ -129,7 +143,24 @@ const softDelete = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
+    const currentUser = req.user;
     const updates = { ...req.body };
+
+    // Check if user is trying to update their own profile or if they are a librarian
+    if (
+      currentUser.role !== "librarian" &&
+      currentUser._id.toString() !== userId
+    ) {
+      return res.status(403).json({
+        status: false,
+        message: "You can only update your own profile",
+      });
+    }
+
+    // If not a librarian, prevent role changes
+    if (currentUser.role !== "librarian" && updates.role) {
+      delete updates.role;
+    }
 
     if (req.file) {
       updates.profileImage = req.file.path;
@@ -147,15 +178,28 @@ const updateUser = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
       new: true,
       runValidators: true,
-    });
+    }).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
     console.log("User updated:", updatedUser);
     res.status(200).json({
+      status: true,
       message: "User updated successfully",
       data: updatedUser,
     });
   } catch (error) {
     console.error("User update failed:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
   }
 };
 

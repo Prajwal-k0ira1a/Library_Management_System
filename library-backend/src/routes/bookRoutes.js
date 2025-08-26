@@ -10,6 +10,10 @@ import { checkRole, authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
+// Public routes (no authentication required)
+router.get("/getAll", getBooks); // Public access for browsing books
+
+// Librarian only routes
 router.post(
   "/create",
   [
@@ -19,10 +23,13 @@ router.post(
   ],
   createBook
 );
-router.get("/getAll", getBooks);
 router.put(
   "/update/:id",
-  [authenticateToken, checkRole("librarian"), uploadBookImages.array("bookImages", 2)],
+  [
+    authenticateToken,
+    checkRole("librarian"),
+    uploadBookImages.array("bookImages", 2),
+  ],
   updateBook
 );
 router.delete(
