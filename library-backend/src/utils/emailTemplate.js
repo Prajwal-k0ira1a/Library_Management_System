@@ -1,25 +1,24 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 // Step 1: Setup email configuration
 const setupEmail = () => {
-    return nodemailer.createTransport({
-        service: 'gmail',
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        auth: {
-            user: process.env.EMAIL_USER, // your email
-            pass: process.env.EMAIL_PASS  // your app password
-        }
-    });
+  return nodemailer.createTransport({
+    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER, // your email
+      pass: process.env.EMAIL_PASS, // your app password
+    },
+  });
 };
 
-
 const templates = {
-    // When user borrows a book
-    bookBorrowed: (userName, bookTitle, dueDate) => ({
-        subject: ` You borrowed: ${bookTitle}`,
-        html: `
+  // When user borrows a book
+  bookBorrowed: (userName, bookTitle, dueDate) => ({
+    subject: ` You borrowed: ${bookTitle}`,
+    html: `
             <!DOCTYPE html>
             <html>
             <head>
@@ -71,13 +70,13 @@ const templates = {
                 </div>
             </body>
             </html>
-        `
-    }),
+        `,
+  }),
 
-    // When book is overdue
-    bookOverdue: (userName, bookTitle, fine) => ({
-        subject: ` OVERDUE: ${bookTitle} - Action Required`,
-        html: `
+  // When book is overdue
+  bookOverdue: (userName, bookTitle, fine) => ({
+    subject: ` OVERDUE: ${bookTitle} - Action Required`,
+    html: `
             <!DOCTYPE html>
             <html>
             <head>
@@ -136,13 +135,13 @@ const templates = {
                 </div>
             </body>
             </html>
-        `
-    }),
+        `,
+  }),
 
-    // When book is returned
-    bookReturned: (userName, bookTitle, fine) => ({
-        subject: ` Book Returned: ${bookTitle}`,
-        html: `
+  // When book is returned
+  bookReturned: (userName, bookTitle, fine) => ({
+    subject: ` Book Returned: ${bookTitle}`,
+    html: `
             <!DOCTYPE html>
             <html>
             <head>
@@ -172,11 +171,12 @@ const templates = {
                             <p style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">
                                 <strong>Returned Book:</strong> ${bookTitle}
                             </p>
-                            ${fine > 0 ? 
-                                `<p style="margin: 0; color: #e74c3c; font-size: 16px;">
+                            ${
+                              fine > 0
+                                ? `<p style="margin: 0; color: #e74c3c; font-size: 16px;">
                                     <strong>Fine Paid:</strong> Rs ${fine}
-                                </p>` : 
-                                `<p style="margin: 0; color: #27ae60; font-size: 16px; font-weight: 600;">
+                                </p>`
+                                : `<p style="margin: 0; color: #27ae60; font-size: 16px; font-weight: 600;">
                                      No fine - returned on time!
                                 </p>`
                             }
@@ -206,13 +206,13 @@ const templates = {
                 </div>
             </body>
             </html>
-        `
-    }),
+        `,
+  }),
 
-    // Welcome new user
-    welcome: (userName, userEmail, userPassword) => ({
-        subject: `🎉 Welcome to Our Library, ${userName}!`,
-        html: `
+  // Welcome new user
+  welcome: (userName, userEmail, userPassword) => ({
+    subject: `🎉 Welcome to Our Library, ${userName}!`,
+    html: `
             <!DOCTYPE html>
             <html>
             <head>
@@ -296,13 +296,13 @@ const templates = {
                 </div>
             </body>
             </html>
-        `
-    }),
+        `,
+  }),
 
-    // Book reminder (3 days before due)
-    bookReminder: (userName, bookTitle, daysLeft) => ({
-        subject: `⏰ Reminder: Return "${bookTitle}" in ${daysLeft} days`,
-        html: `
+  // Book reminder (3 days before due)
+  bookReminder: (userName, bookTitle, daysLeft) => ({
+    subject: `⏰ Reminder: Return "${bookTitle}" in ${daysLeft} days`,
+    html: `
             <!DOCTYPE html>
             <html>
             <head>
@@ -333,7 +333,9 @@ const templates = {
                                 <strong>Book:</strong> ${bookTitle}
                             </p>
                             <p style="margin: 0; color: #e67e22; font-size: 18px; font-weight: 600;">
-                                <strong>Due in:</strong> ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}
+                                <strong>Due in:</strong> ${daysLeft} ${
+      daysLeft === 1 ? "day" : "days"
+    }
                             </p>
                         </div>
                         
@@ -377,13 +379,13 @@ const templates = {
                 </div>
             </body>
             </html>
-        `
-    }),
+        `,
+  }),
 
-    // Bonus: Book reservation confirmation
-    bookReserved: (userName, bookTitle, estimatedDate) => ({
-        subject: `📋 Book Reserved: ${bookTitle}`,
-        html: `
+  // Bonus: Book reservation confirmation
+  bookReserved: (userName, bookTitle, estimatedDate) => ({
+    subject: `📋 Book Reserved: ${bookTitle}`,
+    html: `
             <!DOCTYPE html>
             <html>
             <head>
@@ -432,42 +434,125 @@ const templates = {
                 </div>
             </body>
             </html>
-        `
-    })
+        `,
+  }),
+
+  // When book request is rejected
+  bookRejected: (userName, bookTitle) => ({
+    subject: `❌ Book Request Rejected: ${bookTitle}`,
+    html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Book Request Rejected</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 30px; text-align: center;">
+                        <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300;">❌ Library System</h1>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div style="padding: 40px 30px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #e74c3c, #c0392b); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; color: white;">
+                                ❌
+                            </div>
+                            <h2 style="color: #e74c3c; margin: 0; font-size: 24px; font-weight: 600;">Book Request Rejected</h2>
+                        </div>
+                        
+                        <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">Hi <strong>${userName}</strong>,</p>
+                        
+                        <div style="background-color: #ffebee; border-left: 4px solid #e74c3c; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+                            <p style="margin: 0; color: #2c3e50; font-size: 16px;">
+                                <strong>Book:</strong> ${bookTitle}<br>
+                                <strong>Status:</strong> <span style="color: #e74c3c; font-weight: 600;">Request Rejected</span>
+                            </p>
+                        </div>
+                        
+                        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                            <h3 style="color: #856404; margin: 0 0 15px 0; font-size: 18px;">📝 What this means:</h3>
+                            <ul style="color: #856404; margin: 0; padding-left: 20px;">
+                                <li style="margin-bottom: 8px;">Your request to borrow this book has been declined</li>
+                                <li style="margin-bottom: 8px;">The book may be unavailable or reserved for other purposes</li>
+                                <li style="margin-bottom: 8px;">You can try requesting again later or choose a different book</li>
+                                <li>Contact the library for more information if needed</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background-color: #e8f5e8; border: 1px solid #c3e6c3; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                            <h4 style="color: #2e7d2e; margin: 0 0 15px 0; font-size: 18px;">💡 Suggestions:</h4>
+                            <ul style="color: #2e7d2e; margin: 0; padding-left: 20px;">
+                                <li style="margin-bottom: 8px;">Browse our available books collection</li>
+                                <li style="margin-bottom: 8px;">Check if similar books are available</li>
+                                <li style="margin-bottom: 8px;">Visit the library to speak with a librarian</li>
+                                <li>Consider placing a reservation for when it becomes available</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="#" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: 600; display: inline-block; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); margin: 10px;">
+                                Browse Available Books
+                            </a>
+                            <a href="#" style="background: transparent; color: #667eea; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: 600; display: inline-block; border: 2px solid #667eea; margin: 10px;">
+                                Contact Library
+                            </a>
+                        </div>
+                        
+                        <p style="color: #555; font-size: 16px; line-height: 1.6; text-align: center;">
+                            Don't worry! There are plenty of other great books available for you to enjoy.
+                        </p>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="background-color: #2c3e50; padding: 20px; text-align: center;">
+                        <p style="color: #bdc3c7; margin: 0; font-size: 14px;">
+                            Thank you for understanding<br>
+                            <span style="color: #95a5a6;">© 2025 Library Management System</span>
+                        </p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `,
+  }),
 };
 // Step 3: Simple function to send email
 export const sendEmail = async (userEmail, templateName, ...data) => {
-    try {
-        // Check if email is configured
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.log('Email not configured - skipping email send');
-            return false;
-        }
-
-        // Get email setup
-        const transporter = setupEmail();
-
-        // Check if template exists
-        if (!templates[templateName]) {
-            console.log(`Email template '${templateName}' not found`);
-            return false;
-        }
-
-        // Get the right template
-        const template = templates[templateName](...data);
-
-        // Send email
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: userEmail,
-            subject: template.subject,
-            html: template.html
-        });
-
-        console.log(`✅ Email sent to ${userEmail} - ${template.subject}`);
-        return true;
-    } catch (error) {
-        console.log('❌ Email failed:', error.message);
-        return false;
+  try {
+    // Check if email is configured
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log("Email not configured - skipping email send");
+      return false;
     }
+
+    // Get email setup
+    const transporter = setupEmail();
+
+    // Check if template exists
+    if (!templates[templateName]) {
+      console.log(`Email template '${templateName}' not found`);
+      return false;
+    }
+
+    // Get the right template
+    const template = templates[templateName](...data);
+
+    // Send email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: userEmail,
+      subject: template.subject,
+      html: template.html,
+    });
+
+    console.log(`✅ Email sent to ${userEmail} - ${template.subject}`);
+    return true;
+  } catch (error) {
+    console.log("❌ Email failed:", error.message);
+    return false;
+  }
 };

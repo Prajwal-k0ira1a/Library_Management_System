@@ -27,7 +27,7 @@ const getUsers = async (req, res) => {
 
 export const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user._id).select("-password");
     if (!user) {
       return res.status(404).json({
         status: false,
@@ -131,7 +131,6 @@ const updateUser = async (req, res) => {
     const userId = req.params.id;
     const updates = { ...req.body };
 
-    // Handle profile image if uploaded
     if (req.file) {
       updates.profileImage = req.file.path;
     }

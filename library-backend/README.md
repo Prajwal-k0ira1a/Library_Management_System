@@ -1,41 +1,88 @@
-POST /
-Create a borrow request (requires authentication).
-requestBorrowBook
+Authentication Routes (/api/auth)
+POST /api/auth/register - Register a new user (librarian only)
 
-GET /my
-Get all borrow requests for the authenticated user.
-getMyBorrowRequests
+Requires: profileImage (optional), name, email, password, role
+Protected: Yes, librarian only
+Note: Includes image upload capability
+POST /api/auth/login - Login user
 
-POST /return/:borrowId
-Request to return a borrowed book (requires authentication).
-requestReturn
+Requires: email, password
+Protected: No
+Note: Uses rate limiting
+POST /api/auth/logout - Logout user
 
-GET /pending
-Get all pending borrow requests (librarian only).
-getPendingBorrowRequests
+Protected: No
+Note: Clears authentication cookie
+Book Routes (/api/books)
+POST /api/books/create - Create a new book
 
-PUT /:requestId
-Approve or reject a borrow request (librarian only).
-handleBorrowRequest
+Requires: title, author, isbn, quantity, available, genre, bookImages
+Protected: Yes, librarian only
+Note: Supports multiple image uploads (up to 2)
+GET /api/books/getAll - Get all books
 
-PUT /approve-return/:borrowId
-Approve a return request (librarian only).
-approveReturn
+Protected: No
+Returns: List of all books
+PUT /api/books/update/:id - Update a book
 
-User Routes (library-backend/src/routes/userRoutes.js)
-GET /users/all — Get all users (librarian only)
-GET /users/get/:id — Get user by ID (librarian only)
-GET /users/me — Get current authenticated user
-DELETE /users/delete/:id — Delete user by ID (librarian only)
-PUT /users/update/:id — Update user by ID (with profile image upload)
-Borrow Routes (library-backend/src/routes/borrowRoutes.js)
-POST /borrow/ — Request to borrow a book (authenticated user)
-GET /borrow/my — Get all borrow requests for the authenticated user
-POST /borrow/return/:borrowId — Request to return a borrowed book (authenticated user)
-GET /borrow/pending — Get all pending borrow requests (librarian only)
-PUT /borrow/:requestId — Approve or reject a borrow request (librarian only)
-PUT /borrow/approve-return/:borrowId — Approve a return request (librarian only)
-You can find these route definitions in:
+Requires: book ID and fields to update
+Protected: Yes, librarian only
+Note: Can update quantity, available, and other book details
+DELETE /api/books/delete/:id - Delete a book
 
-userRoutes.js
-borrowRoutes.js
+Requires: book ID
+Protected: Yes, librarian only
+
+
+
+
+Borrow Routes (/api/borrow)
+POST /api/borrow/ - Create a borrow request
+
+Requires: userId, bookId
+Protected: Yes, authenticated user
+GET /api/borrow/my - Get user's borrow requests
+
+Protected: Yes, authenticated user
+Returns: User's borrow history
+POST /api/borrow/return/:borrowId - Request to return a book
+
+Requires: borrowId
+Protected: Yes, authenticated user
+GET /api/borrow/pending - Get all pending borrow requests
+
+Protected: Yes, librarian only
+Returns: All pending borrow requests
+PUT /api/borrow/:requestId - Handle borrow request
+
+Requires: requestId, status
+Protected: Yes, librarian only
+Note: For approving/rejecting borrow requests
+PUT /api/borrow/approve-return/:borrowId - Approve return request
+
+Requires: borrowId
+Protected: Yes, librarian only
+Note: Also handles fine calculation
+
+User Routes (/api/users)
+GET /api/users/all - Get all users
+
+Protected: Yes, librarian only
+Returns: All active users
+GET /api/users/get/:id - Get user by ID
+
+Protected: Yes, librarian only
+Returns: Specific user details
+GET /api/users/me - Get current user profile
+
+Protected: Yes, authenticated user
+Returns: Current user's details
+DELETE /api/users/delete/:id - Soft delete user
+
+Protected: Yes, librarian only
+Note: Sets isActive to false instead of actual deletion
+PUT /api/users/update/:id - Update user
+
+Protected: Partially (can update own profile)
+Supports: profileImage upload, password update
+Note: Passwords are hashed before storage

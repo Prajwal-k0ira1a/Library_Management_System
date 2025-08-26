@@ -5,7 +5,7 @@ import { authenticateToken,checkRole } from "../middleware/auth.js";
 import {limiter} from "../middleware/auth.js";
 const router = express.Router();
 
-router.post("/register", [authenticateToken, checkRole("librarian")], uploadUserImage.single("profileImage"), registerUser);
+router.post("/register", authenticateToken, uploadUserImage.single("profileImage"), registerUser);
 router.post("/login", limiter, loginUser);
 router.post("/logout", logoutUser);
 

@@ -17,10 +17,10 @@ router.get(
   [authenticateToken, checkRole("librarian")],
   getUserById
 );
-router.get("/me", authenticateToken, getCurrentUser);
+router.get("/me", [authenticateToken,uploadUserImage.single("profileImage")], getCurrentUser);
 router.delete(
   "/delete/:id",
-  [authenticateToken, checkRole("librarian")],
+  [authenticateToken],
   softDelete
 );
 router.put("/update/:id", uploadUserImage.single("profileImage"), updateUser);

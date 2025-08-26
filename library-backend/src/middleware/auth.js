@@ -41,8 +41,11 @@ const getUserFromToken = async (token) => {
 function checkRole(...roles) {
   return async (req, res, next) => {
     try {
-      const token = req.cookies?.token;
-      if (!token) return res.status(401).json({ error: "No token in cookies" });
+      let token = req.cookies?.token;
+      if (!token && req.headers?.authorization?.startsWith("Bearer ")) {
+        token = req.headers.authorization.split(" ")[1];
+      }
+      if (!token) return res.status(401).json({ error: "No token provided" });
 
       const user = await getUserFromToken(token);
 
@@ -64,8 +67,11 @@ function checkRole(...roles) {
 // Basic authentication
 async function authenticateToken(req, res, next) {
   try {
-    const token = req.cookies?.token;
-    if (!token) return res.status(401).json({ error: "No token in cookies" });
+    let token = req.cookies?.token;
+    if (!token && req.headers?.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+    if (!token) return res.status(401).json({ error: "No token provided" });
 
     const user = await getUserFromToken(token);
     req.user = user;
@@ -77,4 +83,3 @@ async function authenticateToken(req, res, next) {
 }
 
 export { authenticateToken, checkRole, limiter };
-
