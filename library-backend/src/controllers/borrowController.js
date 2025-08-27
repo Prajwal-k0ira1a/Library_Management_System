@@ -40,6 +40,12 @@ export const handleBorrowRequest = async (req, res) => {
     const { requestId } = req.params;
     const { status, action } = req.body; // support either status or action
 
+    console.log("handleBorrowRequest called with:", {
+      requestId,
+      status,
+      action,
+    });
+
     const desired =
       status ||
       (action === "approve"
@@ -48,31 +54,70 @@ export const handleBorrowRequest = async (req, res) => {
         ? "rejected"
         : undefined);
 
+    if (!desired) {
+      return res.status(400).json({
+        status: false,
+        message: "Missing status or action field",
+      });
+    }
+
+    console.log("Desired action:", desired);
+
     const request = await Borrow.findById(requestId)
       .populate("bookId")
       .populate("userId");
 
-    if (!request)
+    if (!request) {
       return res
         .status(404)
         .json({ status: false, message: "Request not found" });
+    }
+
+    console.log("Found request:", {
+      id: request._id,
+      bookId: request.bookId?._id,
+      userId: request.userId?._id,
+      status: request.status,
+    });
 
     if (desired === "approved") {
+      // Validate book data exists
+      if (!request.bookId || !request.bookId._id) {
+        return res
+          .status(400)
+          .json({ status: false, message: "Invalid book data in request" });
+      }
+
       const book = await Book.findById(request.bookId._id);
-      if (!book || book.available < 1) {
+      if (!book) {
+        return res
+          .status(400)
+          .json({ status: false, message: "Book not found" });
+      }
+
+      if (book.available < 1) {
         return res
           .status(400)
           .json({ status: false, message: "Book not available" });
       }
+
+      console.log("Book found:", {
+        id: book._id,
+        title: book.title,
+        available: book.available,
+      });
 
       // Create Borrow record
       const now = new Date();
       const dueDate = new Date(now);
       dueDate.setDate(dueDate.getDate() + 15);
 
-      // Update book availability
-      book.available -= 1;
-      await book.save();
+      // Update book availability using findByIdAndUpdate to avoid validation issues
+      await Book.findByIdAndUpdate(
+        book._id,
+        { $inc: { available: -1 } },
+        { new: true, runValidators: false }
+      );
 
       // Update request
       request.status = "approved";
@@ -81,13 +126,22 @@ export const handleBorrowRequest = async (req, res) => {
       request.dueDate = dueDate;
       await request.save();
 
-      sendEmail(
-        request.userId.email,
-        "bookBorrowed",
-        request.userId.name,
-        book.title,
-        dueDate.toLocaleDateString()
-      );
+      console.log("Request approved and saved");
+
+      // Send email notification (wrapped in try-catch to prevent email failures from breaking the flow)
+      try {
+        await sendEmail(
+          request.userId.email,
+          "bookBorrowed",
+          request.userId.name,
+          book.title,
+          dueDate.toLocaleDateString()
+        );
+        console.log("Email sent successfully");
+      } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+        // Don't fail the request if email fails
+      }
 
       return res.json({
         status: true,
@@ -98,19 +152,28 @@ export const handleBorrowRequest = async (req, res) => {
       request.status = "rejected";
       await request.save();
 
-      // Send email notification for rejection
-      sendEmail(
-        request.userId.email,
-        "bookRejected",
-        request.userId.name,
-        request.bookId.title
-      );
+      console.log("Request rejected and saved");
+
+      // Send email notification for rejection (wrapped in try-catch)
+      try {
+        await sendEmail(
+          request.userId.email,
+          "bookRejected",
+          request.userId.name,
+          request.bookId.title
+        );
+        console.log("Rejection email sent successfully");
+      } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+        // Don't fail the request if email fails
+      }
 
       return res.json({ status: true, message: "Request rejected" });
     } else {
       return res.status(400).json({ status: false, message: "Invalid action" });
     }
   } catch (err) {
+    console.error("Error in handleBorrowRequest:", err);
     res
       .status(500)
       .json({ status: false, message: "Server error", error: err.message });
@@ -235,11 +298,23 @@ export const approveReturn = async (req, res) => {
         .json({ status: false, message: "No pending return request" });
     }
 
+    // Ensure related book exists before mutating state
+    const bookId = borrowRecord.bookId?._id || borrowRecord.bookId;
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Book not found for this record" });
+    }
+
     borrowRecord.returnDate = new Date();
     borrowRecord.status = "returned";
 
-    // Fine calculation
-    if (borrowRecord.returnDate > borrowRecord.dueDate) {
+    // Fine calculation (only if dueDate exists)
+    if (
+      borrowRecord.dueDate &&
+      borrowRecord.returnDate > borrowRecord.dueDate
+    ) {
       const daysLate = Math.ceil(
         (borrowRecord.returnDate - borrowRecord.dueDate) / (1000 * 60 * 60 * 24)
       );
@@ -248,10 +323,11 @@ export const approveReturn = async (req, res) => {
 
     await borrowRecord.save();
 
-    // Update book stock
-    const book = await Book.findById(borrowRecord.bookId._id);
-    book.available += 1;
-    await book.save();
+    await Book.findByIdAndUpdate(
+      bookId,
+      { $inc: { available: 1 } },
+      { new: true, runValidators: false }
+    );
 
     res.json({
       status: true,
@@ -262,5 +338,48 @@ export const approveReturn = async (req, res) => {
     res
       .status(500)
       .json({ status: false, message: "Server error", error: err.message });
+  }
+};
+
+// Monthly borrow stats for dashboard
+export const getMonthlyBorrowStats = async (req, res) => {
+  try {
+    // Aggregate borrows by month
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const borrows = await Borrow.aggregate([
+      {
+        $group: {
+          _id: { month: { $month: "$borrowDate" } },
+          borrowed: { $sum: 1 },
+          returned: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "returned"] }, 1, 0],
+            },
+          },
+        },
+      },
+      { $sort: { "_id.month": 1 } },
+    ]);
+    const result = borrows.map((b) => ({
+      month: monthNames[b._id.month - 1],
+      borrowed: b.borrowed,
+      returned: b.returned,
+    }));
+    res.json({ data: result });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get monthly stats" });
   }
 };
