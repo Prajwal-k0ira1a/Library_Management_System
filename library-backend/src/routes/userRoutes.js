@@ -20,7 +20,7 @@ router.get(
 );
 
 // Routes accessible by both borrowers and librarians
-router.get("/me", [authenticateToken], getCurrentUser);
+router.get("/me", authenticateToken, getCurrentUser);
 router.put(
   "/update/:id",
   [authenticateToken, uploadUserImage.single("profileImage")],

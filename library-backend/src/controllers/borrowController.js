@@ -9,6 +9,18 @@ export const requestBorrowBook = async (req, res) => {
     const userId = req.user._id;
     const { bookId } = req.body;
 
+    // Enforce a maximum of 3 active borrows per user
+    const activeCount = await Borrow.countDocuments({
+      userId,
+      status: { $in: ["approved", "pending_return"] },
+    });
+    if (activeCount >= 3) {
+      return res.status(400).json({
+        status: false,
+        message: "Borrow limit reached (max 3 active books)",
+      });
+    }
+
     // check if already pending
     const existing = await Borrow.findOne({
       userId,
@@ -81,6 +93,18 @@ export const handleBorrowRequest = async (req, res) => {
     });
 
     if (desired === "approved") {
+      // Enforce a maximum of 3 active borrows per user before approving
+      const activeCount = await Borrow.countDocuments({
+        userId: request.userId._id || request.userId,
+        status: { $in: ["approved", "pending_return"] },
+      });
+      if (activeCount >= 3) {
+        return res.status(400).json({
+          status: false,
+          message: "Borrow limit reached (max 3 active books)",
+        });
+      }
+
       // Validate book data exists
       if (!request.bookId || !request.bookId._id) {
         return res
