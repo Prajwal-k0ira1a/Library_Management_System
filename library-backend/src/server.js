@@ -20,16 +20,35 @@ const app = express();
 // Deployment
 app.use(
   cors({
-    origin: "https://library-frontend-taupe.vercel.app",
+    origin: [
+      "https://library-frontend-taupe.vercel.app",
+      "http://localhost:5173",
+      "https://library-management-system-lxk1.onrender.com",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   })
 );
 app.use(express.json());
 app.use(cookieParser());
 app.get("/", (req, res) => {
-  res.send("Ok");
+  res.json({
+    status: "OK",
+    message: "Library Management System Backend is running",
+    timestamp: new Date().toISOString(),
+  });
 });
+
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+  });
+});
+
 app.get("/login", (req, res) => {
   res.send("Bhayo Login Jau aba");
 });
@@ -66,4 +85,4 @@ connectDB().then(() => {
   );
 });
 
-// seedAdmin();
+seedAdmin();

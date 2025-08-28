@@ -71,14 +71,34 @@ async function authenticateToken(req, res, next) {
     if (!token && req.headers?.authorization?.startsWith("Bearer ")) {
       token = req.headers.authorization.split(" ")[1];
     }
-    if (!token) return res.status(401).json({ error: "No token provided" });
+    if (!token) {
+      console.log("No token found in cookies or headers");
+      return res.status(401).json({
+        error: "Authentication required. Please login again.",
+        details: "No token provided in cookies or Authorization header",
+      });
+    }
 
     const user = await getUserFromToken(token);
     req.user = user;
     next();
   } catch (err) {
     console.error("authenticateToken error:", err);
-    res.status(401).json({ error: err.message });
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        error: "Token expired. Please login again.",
+        details: err.message,
+      });
+    } else if (err.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        error: "Invalid token. Please login again.",
+        details: err.message,
+      });
+    }
+    res.status(401).json({
+      error: "Authentication failed. Please login again.",
+      details: err.message,
+    });
   }
 }
 

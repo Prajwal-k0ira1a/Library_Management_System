@@ -68,11 +68,10 @@ export const loginUser = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production", // true in production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
 
