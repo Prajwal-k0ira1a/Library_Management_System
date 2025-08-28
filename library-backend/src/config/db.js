@@ -5,7 +5,6 @@ const connectDB = async () => {
   if (!mongoURI) {
     throw new Error('MongoDB URI is not defined in environment variables');
   }
-
   try {
     const options = {
       useNewUrlParser: true,

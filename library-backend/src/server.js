@@ -9,10 +9,6 @@ import User from "./models/User.js";
 import connectDB from "./config/db.js";
 // Load environment variables from .env file
 dotenv.config();
-
-// Debug: Check if JWT_SECRET is loaded
-// console.log("JWT_SECRET loaded:", !!process.env.JWT_SECRET);
-// console.log("PORT:", process.env.PORT);
 const app = express();
 // app.use(
 //   cors({
@@ -24,14 +20,11 @@ const app = express();
 // Deployment
 app.use(
   cors({
-    origin: [
-      "https://library-frontend-taupe.vercel.app",
-    ],
+    origin: "https://library-frontend-taupe.vercel.app",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
-
 app.use(express.json());
 app.use(cookieParser());
 app.get("/", (req, res) => {
