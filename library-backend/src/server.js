@@ -24,7 +24,9 @@ const app = express();
 // Deployment
 app.use(
   cors({
-    origin: "https://library-frontend-taupe.vercel.app",
+    origin: [
+      "https://library-frontend-taupe.vercel.app",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
