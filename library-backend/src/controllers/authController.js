@@ -41,7 +41,11 @@ export const registerUser = async (req, res) => {
   } catch (err) {
     res
       .status(500) // Internal Server Error
-      .json({ status: false, message: "Server error", error: err.message });
+      .json({
+        status: false,
+        message: "Somthing went wrong here",
+        error: err.message,
+      });
   }
 };
 

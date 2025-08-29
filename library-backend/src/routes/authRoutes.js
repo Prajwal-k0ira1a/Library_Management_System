@@ -10,7 +10,7 @@ import { limiter } from "../middleware/auth.js";
 const router = express.Router();
 
 // Public routes (no authentication required)
-router.post("/register", uploadUserImage.single("profileImage"), registerUser); // Allow public registration
+router.post("/register", uploadUserImage.single("profileImage"), registerUser); 
 router.post("/login", limiter, loginUser);
 
 // Routes requiring authentication
