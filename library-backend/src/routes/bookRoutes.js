@@ -3,6 +3,7 @@ import { uploadBookImages } from "../config/cloudinary.js";
 import {
   createBook,
   getBooks,
+  getBookById,
   updateBook,
   deleteBook,
 } from "../controllers/bookController.js";
@@ -12,7 +13,7 @@ const router = express.Router();
 
 // Public routes (no authentication required)
 router.get("/getAll", getBooks); // Public access for browsing books
-
+router.get("/getBookById/:id",getBookById); 
 // Librarian only routes
 router.post(
   "/create",
