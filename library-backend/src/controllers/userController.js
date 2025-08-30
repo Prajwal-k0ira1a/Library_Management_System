@@ -145,9 +145,7 @@ const updateUser = async (req, res) => {
     const userId = req.params.id;
     const currentUser = req.user;
     const updates = { ...req.body };
-    console.log(updates);
-    console.log(currentUser);
-    console.log(userId);
+    
     // Check if user is trying to update their own profile or if they are a librarian
     if (
       currentUser.role !== "librarian" &&
