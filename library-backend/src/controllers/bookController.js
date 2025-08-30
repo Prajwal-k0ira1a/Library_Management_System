@@ -3,8 +3,10 @@ import Book from "../models/Book.js";
 // Create a new book (Librarian only)
 export const createBook = async (req, res) => {
   try {
-    const { title, author, isbn, quantity, available, genre } = req.body;
-    const bookImages = req.files.map((file) => file.path);
+    const { title, author, isbn, quantity, available, genre, description } = req.body;
+
+    // Use req.file for single file upload
+    const bookImage = req.file ? req.file.path : undefined;
 
     const existing = await Book.findOne({ isbn });
     if (existing) {
@@ -14,13 +16,14 @@ export const createBook = async (req, res) => {
     }
 
     const book = new Book({
-      bookImages,
+      bookImage,
       title,
       author,
       isbn,
       quantity,
       available,
       genre,
+      description,
     });
 
     await book.save();
@@ -30,6 +33,7 @@ export const createBook = async (req, res) => {
       book,
     });
   } catch (err) {
+    console.error("Create book error:", err);
     res.status(500).json({
       status: false,
       message: "Server error",
@@ -37,6 +41,7 @@ export const createBook = async (req, res) => {
     });
   }
 };
+
 // Get all books
 export const getBooks = async (req, res) => {
   try {
@@ -77,6 +82,8 @@ export const updateBook = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
+console.log("Update data received:", updateData);
+
     // Handle quantity updates - ensure it's a positive number
     if (updateData.quantity !== undefined) {
       if (updateData.quantity < 0) {
@@ -126,6 +133,11 @@ export const updateBook = async (req, res) => {
       }
     }
 
+    // ✅ Handle uploaded book image
+    if (req.file) {
+      updateData.bookImage = req.file.path; // store single image path
+    }
+
     // Find and update the book
     const updatedBook = await Book.findByIdAndUpdate(id, updateData, {
       new: true,
@@ -156,6 +168,7 @@ export const updateBook = async (req, res) => {
         isbn: updatedBook.isbn,
         quantity: updatedBook.quantity,
         available: updatedBook.available,
+        bookImage: updatedBook.bookImage,
       },
       updatedFields: updatedFields,
       updatedAt: new Date(),
@@ -168,6 +181,7 @@ export const updateBook = async (req, res) => {
     });
   }
 };
+
 
 // Delete a book
 export const deleteBook = async (req, res) => {

@@ -20,7 +20,7 @@ router.post(
   [
     authenticateToken,
     checkRole("librarian"),
-    uploadBookImages.array("bookImages", 2),
+    uploadBookImages.single("bookImage"),
   ],
   createBook
 );
@@ -29,7 +29,7 @@ router.put(
   [
     authenticateToken,
     checkRole("librarian"),
-    uploadBookImages.array("bookImages", 2),
+    uploadBookImages.single("bookImage"),
   ],
   updateBook
 );
