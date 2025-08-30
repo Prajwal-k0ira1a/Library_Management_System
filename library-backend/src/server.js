@@ -24,6 +24,7 @@ app.use(
       "https://library-frontend-taupe.vercel.app",
       "http://localhost:5173",
       "https://library-management-system-lxk1.onrender.com",
+      "http://localhost:8081",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
